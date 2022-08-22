@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "tsc-watch --onSuccess \"node dist/index.js\""
+    "run": "tsc-watch --onSuccess \"node dist/index.js\"",
+    "start": "tsc && node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -15,6 +16,9 @@
   "keywords": [
     "discord"
   ],
+  "engines": {
+    "node": "16.x"
+  },
   "author": "Fikip",
   "license": "ISC",
   "bugs": {
