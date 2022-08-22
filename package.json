@@ -1,0 +1,27 @@
+{
+  "name": "office-manager-discord-bot",
+  "version": "0.0.1",
+  "description": "This is an office manager discord bot specifically made for Ganjabes discord server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bozskejkaja/office-manager-discord-bot.git"
+  },
+  "keywords": [
+    "discord"
+  ],
+  "author": "Fikip",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bozskejkaja/office-manager-discord-bot/issues"
+  },
+  "homepage": "https://github.com/bozskejkaja/office-manager-discord-bot#readme",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "discord.js": "^14.2.0",
+    "express": "^4.18.1"
+  }
+}
