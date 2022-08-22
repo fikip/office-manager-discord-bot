@@ -23,7 +23,9 @@ client.on('interactionCreate', async (interaction) => {
     const rate = interaction.options.getNumber('rate')
     const clientId = interaction.user.id
     if (rate && clientId) {
-      const { data, error } = await supabase.from('users').upsert({ id: clientId, rate: rate })
+      const { data, error } = await supabase
+        .from('users')
+        .upsert({ id: clientId, rate: rate, name: interaction.user.username })
       if (!error) {
         await interaction.editReply({ content: `Your rate of ${rate} has been successfully recorded.` })
       }
