@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, TextChannel } from 'discord.js'
 import * as dotenv from 'dotenv'
 import { COMMAND_NAMES, initCommands } from './commands'
 import { createClient } from '@supabase/supabase-js'
+import { isWithinInterval } from 'date-fns'
 dotenv.config()
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
 
@@ -41,39 +42,55 @@ client.on('interactionCreate', async (interaction) => {
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
   const IS_MUTED_OR_DEAFENED = oldState.mute !== newState.mute || oldState.deaf !== newState.deaf
-  if (!IS_MUTED_OR_DEAFENED) {
-    const channels = await supabase.from('channels').select('id')
-    if (!channels.error && channels.data) {
-      const channelIds = channels.data.map((row) => row.id)
-      if (channelIds.includes(newState.channelId)) {
-        const channelMembers = newState.channel?.members
-        if (channelMembers) {
-          const usersInChannel = channelMembers.keys()
-          const usersFromDB = await supabase.from('users').select('id, rate')
-          if (usersFromDB.data && !usersFromDB.error) {
-            let finalRate = 0
-            // Calculate hourly rate
-            for (const userId of usersInChannel) {
-              const foundUser = usersFromDB.data.find((user) => user.id === userId)
-              if (foundUser) finalRate += foundUser.rate
-            }
-
-            // Clear last message in chat if it's from a bot, so that we're not spamming too much
-            const tailMessages = await (client.channels.cache.get(newState.channel?.id) as TextChannel).messages.fetch({
-              limit: 1,
-            })
-            const lastMessage = tailMessages.first()
-            if (lastMessage && lastMessage.author.bot) {
-              lastMessage.delete()
-            }
-
-            // Send the hourly rate message
-            const hourlyRateMessage = await (client.channels.cache.get(newState.channel?.id) as TextChannel).send(
-              `Current hourly rate for this room is ||${finalRate}||€.`
-            )
+  const WORKING_TIME_START = new Date(new Date().setHours(8, 0, 0))
+  const WORKING_TIME_END = new Date(new Date().setHours(18, 0, 0))
+  if (!isWithinInterval(new Date(), { start: WORKING_TIME_START, end: WORKING_TIME_END })) {
+    // If it's not working hours, don't do anything.
+    return
+  }
+  if (IS_MUTED_OR_DEAFENED) {
+    // If the user is just turning his mic or sound on/off, don't do anything
+    return
+  }
+  const channels = await supabase.from('channels').select('id')
+  if (!channels.error && channels.data) {
+    const channelIds = channels.data.map((row) => row.id)
+    if (channelIds.includes(newState.channelId)) {
+      const channelMembers = newState.channel?.members
+      if (channelMembers) {
+        const usersInChannel = channelMembers.keys()
+        const usersFromDB = await supabase.from('users').select('id, rate')
+        if (usersFromDB.data && !usersFromDB.error) {
+          let finalRate = 0
+          // Calculate hourly rate
+          for (const userId of usersInChannel) {
+            const foundUser = usersFromDB.data.find((user) => user.id === userId)
+            if (foundUser) finalRate += foundUser.rate
           }
+
+          await clearLastBotMessage(newState.channelId)
+
+          // Send the hourly rate message
+          const hourlyRateMessage = await (client.channels.cache.get(newState.channel?.id) as TextChannel).send(
+            `Current hourly rate for this room is ||${finalRate}||€.`
+          )
         }
       }
     }
   }
 })
+
+const clearLastBotMessage = async (channelId: string | null) => {
+  if (!channelId) {
+    console.log('no channel ID provided to clear last bot message')
+    return
+  }
+  // Clear last message in chat if it's from a bot, so that we're not spamming too much
+  const tailMessages = await (client.channels.cache.get(channelId) as TextChannel).messages.fetch({
+    limit: 1,
+  })
+  const lastMessage = tailMessages.first()
+  if (lastMessage && lastMessage.author.bot) {
+    lastMessage.delete()
+  }
+}
