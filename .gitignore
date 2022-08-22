@@ -18,3 +18,5 @@ yarn-error.log
 .run
 /services/accr/openapi/
 /.jpb/*
+
+dist/

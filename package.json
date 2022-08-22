@@ -2,9 +2,11 @@
   "name": "office-manager-discord-bot",
   "version": "0.0.1",
   "description": "This is an office manager discord bot specifically made for Ganjabes discord server",
-  "main": "index.js",
+  "main": "index.ts",
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "tsc-watch --onSuccess \"node dist/index.js\""
   },
   "repository": {
     "type": "git",
@@ -20,8 +22,22 @@
   },
   "homepage": "https://github.com/bozskejkaja/office-manager-discord-bot#readme",
   "dependencies": {
+    "@discordjs/ws": "^0.3.0",
+    "@supabase/supabase-js": "^1.35.6",
     "body-parser": "^1.20.0",
     "discord.js": "^14.2.0",
+    "dotenv": "^16.0.1",
     "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.9",
+    "@typescript-eslint/eslint-plugin": "^5.33.1",
+    "@typescript-eslint/parser": "^5.33.1",
+    "eslint": "^8.22.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1",
+    "tsc-watch": "^5.0.3",
+    "typescript": "^4.7.4"
   }
 }
