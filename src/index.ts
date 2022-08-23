@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, TextChannel } from 'discord.js'
+import { Client, GatewayIntentBits, TextChannel, VoiceState } from 'discord.js'
 import * as dotenv from 'dotenv'
 import { COMMAND_NAMES, initCommands } from './commands'
 import { createClient } from '@supabase/supabase-js'
@@ -54,11 +54,17 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     // If the user is just turning his mic or sound on/off, don't do anything
     return
   }
+  // Generate rates for both the previous & the new room
+  generateHourlyRate(oldState)
+  generateHourlyRate(newState)
+})
+
+const generateHourlyRate = async (state: VoiceState) => {
   const channels = await supabase.from('channels').select('id')
   if (!channels.error && channels.data) {
     const channelIds = channels.data.map((row) => row.id)
-    if (channelIds.includes(newState.channelId)) {
-      const channelMembers = newState.channel?.members
+    if (channelIds.includes(state.channelId)) {
+      const channelMembers = state.channel?.members
       if (channelMembers) {
         const usersInChannel = channelMembers.keys()
         const usersFromDB = await supabase.from('users').select('id, rate')
@@ -70,17 +76,17 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             if (foundUser) finalRate += foundUser.rate
           }
 
-          await clearLastBotMessage(newState.channelId)
+          await clearLastBotMessage(state.channelId)
 
           // Send the hourly rate message
-          const hourlyRateMessage = await (client.channels.cache.get(newState.channel?.id) as TextChannel).send(
+          const hourlyRateMessage = await (client.channels.cache.get(state.channel?.id) as TextChannel).send(
             `Current hourly rate for this room is ||${finalRate}||€.`
           )
         }
       }
     }
   }
-})
+}
 
 const clearLastBotMessage = async (channelId: string | null) => {
   if (!channelId) {
