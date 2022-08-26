@@ -2,7 +2,9 @@ import { Client, GatewayIntentBits, TextChannel, VoiceState } from 'discord.js'
 import * as dotenv from 'dotenv'
 import { COMMAND_NAMES, initCommands } from './commands'
 import { createClient } from '@supabase/supabase-js'
-import { isWithinInterval } from 'date-fns'
+import { isBefore, isWithinInterval } from 'date-fns'
+import { generateFinalRate } from './utils'
+
 dotenv.config()
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
 
@@ -43,15 +45,18 @@ client.on('interactionCreate', async (interaction) => {
 })
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-  const IS_MUTED_OR_DEAFENED = oldState.mute !== newState.mute || oldState.deaf !== newState.deaf
+  const IS_MUTED = oldState.mute !== newState.mute
+  const IS_DEAFENED = oldState.deaf !== newState.deaf
+  const IS_STREAMING = oldState.streaming !== newState.streaming
   const WORKING_TIME_START = new Date(new Date().setHours(8, 0, 0))
   const WORKING_TIME_END = new Date(new Date().setHours(18, 0, 0))
+
   if (!isWithinInterval(new Date(), { start: WORKING_TIME_START, end: WORKING_TIME_END })) {
     // If it's not working hours, don't do anything.
     return
   }
-  if (IS_MUTED_OR_DEAFENED) {
-    // If the user is just turning his mic or sound on/off, don't do anything
+  if (IS_MUTED || IS_DEAFENED || IS_STREAMING) {
+    // If the user is just turning his mic, sound & streaming on/off, don't do anything
     return
   }
   // Generate rates for both the previous & the new room
@@ -76,29 +81,42 @@ const generateHourlyRate = async (state: VoiceState) => {
             if (foundUser) finalRate += foundUser.rate
           }
 
-          await clearLastBotMessage(state.channelId)
-
-          // Send the hourly rate message
-          const hourlyRateMessage = await (client.channels.cache.get(state.channel?.id) as TextChannel).send(
-            `Current hourly rate for this room is ||${finalRate}||€.`
-          )
+          await upsertMessage(state, finalRate)
         }
       }
     }
   }
 }
 
-const clearLastBotMessage = async (channelId: string | null) => {
-  if (!channelId) {
+const upsertMessage = async (state: VoiceState, finalRate: number) => {
+  if (!state.channelId) {
     console.log('no channel ID provided to clear last bot message')
     return
   }
-  // Clear last message in chat if it's from a bot, so that we're not spamming too much
-  const tailMessages = await (client.channels.cache.get(channelId) as TextChannel).messages.fetch({
-    limit: 1,
+  const tailMessages = await (client.channels.cache.get(state.channelId) as TextChannel).messages.fetch({
+    limit: 10,
   })
-  const lastMessage = tailMessages.first()
+
+  const sortedMessages = tailMessages
+    .filter((msg) => !!msg)
+    .sort((m1, m2) => (isBefore(m2.editedAt || m2.createdAt, m1.editedAt || m1.createdAt) ? 1 : -1))
+
+  const tailWithoutLast = sortedMessages.last(-(sortedMessages.size - 1))
+  tailWithoutLast.forEach((message) => {
+    if (message && message.author.bot) {
+      // Cleanup extra messages from bot, so that we're not spamming too much
+      message.delete()
+    }
+  })
+  const lastMessage = sortedMessages.last()
+
   if (lastMessage && lastMessage.author.bot) {
-    lastMessage.delete()
+    // Edit if the last message is from our bot
+    lastMessage.edit(generateFinalRate(finalRate))
+  } else {
+    // Send the hourly rate message
+    const hourlyRateMessage = await (client.channels.cache.get(state.channelId) as TextChannel).send(
+      generateFinalRate(finalRate)
+    )
   }
 }
