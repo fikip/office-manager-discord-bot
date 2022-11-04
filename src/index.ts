@@ -4,7 +4,7 @@ import { COMMAND_NAMES, initCommands } from './commands'
 import { createClient } from '@supabase/supabase-js'
 import { isBefore, isWithinInterval } from 'date-fns'
 import { generateFinalRate } from './utils'
-
+import express from 'express'
 dotenv.config()
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
 
@@ -120,3 +120,9 @@ const upsertMessage = async (state: VoiceState, finalRate: number) => {
     )
   }
 }
+
+// Express fake init to keep the service alive
+const app = express()
+const port = process.env.PORT || 3001
+
+app.listen(port, () => console.log(`Listening on port ${port}!`))
