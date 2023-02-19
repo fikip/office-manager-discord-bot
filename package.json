@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "run": "tsc-watch --onSuccess \"node dist/index.js\"",
-    "build": "npx tsc",
+    "build": "ncc build src/index.ts -o dist ",
     "start": "node dist/index.js"
   },
   "repository": {
@@ -36,6 +36,7 @@
     "@types/node": "^18.7.13",
     "@typescript-eslint/eslint-plugin": "^5.36.0",
     "@typescript-eslint/parser": "^5.36.0",
+    "@vercel/ncc": "^0.36.1",
     "body-parser": "^1.20.0",
     "eslint": "^8.22.0",
     "eslint-config-prettier": "^8.5.0",
