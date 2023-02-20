@@ -1,8 +1,9 @@
 import { REST, Routes, SlashCommandBuilder } from 'discord.js'
 
 export enum COMMAND_NAMES {
-  'ADD_RATE' = 'add-rate',
-  'ADD_CHANNEL_FOR_CALCULATION' = 'add-channel-for-calculation',
+  ADD_RATE = 'add-rate',
+  ADD_CHANNEL_FOR_CALCULATION = 'add-channel-for-calculation',
+  LIST_CHANNELS = 'list-channels',
 }
 
 const commands = [
@@ -16,6 +17,9 @@ const commands = [
     .addChannelOption((opt) =>
       opt.setName('channel').setDescription('New channel to use for calculation').setRequired(true)
     ),
+  new SlashCommandBuilder()
+    .setName(COMMAND_NAMES.LIST_CHANNELS)
+    .setDescription('List all rooms this bot is subscribed to'),
 ].map((cmd) => cmd.toJSON())
 
 export const initCommands = async () => {

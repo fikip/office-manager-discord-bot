@@ -41,6 +41,10 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.editReply({ content: `The channel ${channel.name} has been added to tracked channels.` })
       }
     }
+  } else if (interaction.commandName === COMMAND_NAMES.LIST_CHANNELS) {
+    await interaction.deferReply({ ephemeral: true })
+    const { data, error } = await supabase.from('channels').select('name')
+    await interaction.editReply({ content: `The currently subscribed channels are: ${data?.map((row) => row.name)}` })
   }
 })
 
@@ -126,3 +130,7 @@ const app = express()
 const port = process.env.PORT || 3001
 
 app.listen(port, () => console.log(`Listening on port ${port}!`))
+
+app.get('/', async (req, res) => {
+  return res.send('Office manager discord bot should be live')
+})
