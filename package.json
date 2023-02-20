@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/bozskejkaja/office-manager-discord-bot#readme",
   "dependencies": {
+    "@discordjs/ws": "^0.6.0",
     "@supabase/supabase-js": "^1.35.6",
     "date-fns": "^2.29.2",
     "discord.js": "^14.3.0",
