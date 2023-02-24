@@ -9,6 +9,8 @@ dotenv.config()
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
 
 client.login(process.env.DISCORD_BOT_TOKEN)
+console.log(process.env.DISCORD_BOT_TOKEN)
+
 const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_KEY || '')
 
 initCommands()
