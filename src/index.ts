@@ -8,12 +8,9 @@ import express from 'express'
 dotenv.config()
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
 
-client.login(process.env.DISCORD_BOT_TOKEN)
-console.log(process.env.DISCORD_BOT_TOKEN)
+client.login(process.env.DISCORD_BOT_TOKEN).then(initCommands)
 
 const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_KEY || '')
-
-initCommands()
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user?.tag}!`)
