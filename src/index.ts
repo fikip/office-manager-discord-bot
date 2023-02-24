@@ -17,6 +17,10 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user?.tag}!`)
 })
 
+client.on('error', (error) => {
+  console.error(error)
+})
+
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
 
